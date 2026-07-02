@@ -1,0 +1,999 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Xeno Executor — Keyless Injection Engine</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+    <style>
+        /* ===== RESET & BASE ===== */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            background: #05070a;
+            color: #eef2f8;
+            line-height: 1.6;
+        }
+
+        a {
+            text-decoration: none;
+            color: inherit;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 24px;
+        }
+
+        /* ===== SCROLLBAR ===== */
+        ::-webkit-scrollbar {
+            width: 5px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #0a0c12;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #6b21a8;
+            border-radius: 10px;
+        }
+
+        /* ===== BUTTONS ===== */
+        .btn-primary {
+            display: inline-block;
+            background: linear-gradient(135deg, #6b21a8, #9333ea);
+            color: #fff;
+            font-weight: 700;
+            padding: 14px 36px;
+            border-radius: 40px;
+            border: none;
+            font-size: 1.05rem;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 0 30px rgba(147, 51, 234, 0.25);
+        }
+        .btn-primary:hover {
+            transform: translateY(-3px) scale(1.02);
+            box-shadow: 0 0 50px rgba(147, 51, 234, 0.45);
+        }
+
+        .btn-secondary {
+            display: inline-block;
+            background: transparent;
+            color: #eef2f8;
+            font-weight: 600;
+            padding: 12px 32px;
+            border-radius: 40px;
+            border: 1.5px solid #6b21a8;
+            font-size: 1.05rem;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .btn-secondary:hover {
+            background: rgba(107, 33, 168, 0.2);
+            box-shadow: 0 0 30px rgba(107, 33, 168, 0.15);
+            transform: translateY(-2px);
+        }
+
+        .btn-download {
+            display: inline-flex;
+            align-items: center;
+            gap: 12px;
+            background: linear-gradient(135deg, #6b21a8, #9333ea);
+            color: #fff;
+            font-weight: 700;
+            padding: 16px 44px;
+            border-radius: 40px;
+            border: none;
+            font-size: 1.1rem;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 0 40px rgba(147, 51, 234, 0.3);
+        }
+        .btn-download:hover {
+            transform: translateY(-3px) scale(1.03);
+            box-shadow: 0 0 60px rgba(147, 51, 234, 0.5);
+        }
+
+        /* ===== HEADER ===== */
+        header {
+            padding: 18px 0;
+            border-bottom: 1px solid rgba(147, 51, 234, 0.08);
+            background: rgba(5, 7, 10, 0.92);
+            backdrop-filter: blur(16px);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .nav {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 16px;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 1.5rem;
+            font-weight: 800;
+            letter-spacing: -0.5px;
+        }
+        .logo span {
+            background: linear-gradient(135deg, #a855f7, #d8b4fe);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .logo i {
+            color: #9333ea;
+            font-size: 1.8rem;
+            filter: drop-shadow(0 0 12px rgba(147, 51, 234, 0.4));
+        }
+
+        .nav-links {
+            display: flex;
+            align-items: center;
+            gap: 32px;
+            list-style: none;
+            font-weight: 500;
+            color: #94a3b8;
+        }
+        .nav-links a {
+            transition: color 0.25s;
+            position: relative;
+            cursor: pointer;
+        }
+        .nav-links a::after {
+            content: '';
+            position: absolute;
+            left: 0;
+            bottom: -4px;
+            width: 0%;
+            height: 2px;
+            background: #9333ea;
+            transition: width 0.3s;
+        }
+        .nav-links a:hover {
+            color: #eef2f8;
+        }
+        .nav-links a:hover::after {
+            width: 100%;
+        }
+        .nav-links a.active {
+            color: #eef2f8;
+        }
+        .nav-links a.active::after {
+            width: 100%;
+        }
+
+        /* ===== HERO ===== */
+        .hero {
+            padding: 70px 0 50px;
+            text-align: center;
+            position: relative;
+        }
+
+        .hero::before {
+            content: '';
+            position: absolute;
+            top: -40%;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 700px;
+            height: 700px;
+            background: radial-gradient(circle, rgba(147, 51, 234, 0.06) 0%, transparent 70%);
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .hero>* {
+            position: relative;
+            z-index: 1;
+        }
+
+        .hero-badge {
+            display: inline-block;
+            background: rgba(147, 51, 234, 0.12);
+            border: 1px solid rgba(147, 51, 234, 0.2);
+            padding: 8px 28px;
+            border-radius: 40px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: #c084fc;
+            letter-spacing: 0.5px;
+            margin-bottom: 24px;
+            backdrop-filter: blur(8px);
+        }
+        .hero-badge i {
+            margin-right: 8px;
+            color: #22c55e;
+            font-size: 0.5rem;
+            vertical-align: middle;
+        }
+
+        .hero h1 {
+            font-size: 4.5rem;
+            font-weight: 900;
+            line-height: 1.05;
+            letter-spacing: -2px;
+            margin-bottom: 16px;
+        }
+        .hero h1 .highlight {
+            background: linear-gradient(135deg, #a855f7, #d8b4fe, #a855f7);
+            background-size: 200% 200%;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            animation: shimmer 4s ease-in-out infinite;
+        }
+
+        @keyframes shimmer {
+            0%,
+            100% {
+                background-position: 0% 50%;
+            }
+            50% {
+                background-position: 100% 50%;
+            }
+        }
+
+        .hero p {
+            font-size: 1.2rem;
+            color: #64748b;
+            max-width: 640px;
+            margin: 0 auto 36px;
+        }
+
+        .hero-buttons {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 18px;
+        }
+
+        /* ===== SECTION TITLE ===== */
+        .section-title {
+            font-size: 2rem;
+            text-align: center;
+            margin-bottom: 6px;
+            color: #eef2f8;
+        }
+        .section-title span {
+            color: #a855f7;
+        }
+
+        .section-subtitle {
+            text-align: center;
+            color: #64748b;
+            max-width: 600px;
+            margin: 0 auto 8px;
+        }
+
+        /* ===== FEATURES ===== */
+        .features {
+            padding: 60px 0 30px;
+        }
+
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+            gap: 28px;
+            margin-top: 36px;
+        }
+
+        .feature-card {
+            background: #0a0c12;
+            padding: 32px 26px;
+            border-radius: 20px;
+            border: 1px solid #141a24;
+            transition: all 0.35s;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .feature-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, #9333ea, transparent);
+            opacity: 0;
+            transition: opacity 0.4s;
+        }
+
+        .feature-card:hover {
+            border-color: #2a1f3a;
+            transform: translateY(-5px);
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6);
+        }
+
+        .feature-card:hover::before {
+            opacity: 1;
+        }
+
+        .feature-card .icon {
+            font-size: 2.2rem;
+            color: #9333ea;
+            margin-bottom: 14px;
+            display: inline-block;
+            filter: drop-shadow(0 0 20px rgba(147, 51, 234, 0.15));
+        }
+        .feature-card h3 {
+            font-size: 1.2rem;
+            margin-bottom: 8px;
+            color: #eef2f8;
+        }
+        .feature-card p {
+            color: #64748b;
+            font-size: 0.95rem;
+        }
+
+        /* ===== FEATURE DETAIL (what you requested) ===== */
+        .feature-detail {
+            display: none;
+            animation: fadeIn 0.5s ease;
+        }
+
+        .feature-detail.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .feature-detail-block {
+            background: #0a0c12;
+            border-radius: 20px;
+            padding: 36px 40px;
+            border: 1px solid #141a24;
+            margin-bottom: 28px;
+            transition: border-color 0.3s;
+        }
+
+        .feature-detail-block:hover {
+            border-color: #2a1f3a;
+        }
+
+        .feature-detail-block .detail-icon {
+            font-size: 2.4rem;
+            color: #9333ea;
+            margin-bottom: 12px;
+            display: inline-block;
+        }
+
+        .feature-detail-block h2 {
+            font-size: 1.6rem;
+            font-weight: 700;
+            margin-bottom: 4px;
+            color: #eef2f8;
+        }
+
+        .feature-detail-block h2 .highlight {
+            color: #a855f7;
+        }
+
+        .feature-detail-block p {
+            color: #94a3b8;
+            font-size: 1.05rem;
+            max-width: 700px;
+        }
+
+        .feature-detail-block .tag-group {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            margin: 12px 0 8px;
+        }
+
+        .feature-detail-block .tag {
+            display: inline-block;
+            background: rgba(147, 51, 234, 0.12);
+            padding: 4px 16px;
+            border-radius: 20px;
+            font-size: 0.7rem;
+            font-weight: 600;
+            color: #a855f7;
+            border: 1px solid rgba(147, 51, 234, 0.1);
+        }
+
+        .feature-detail-block .tag.green {
+            background: rgba(34, 197, 94, 0.12);
+            color: #34d399;
+            border-color: rgba(34, 197, 94, 0.1);
+        }
+
+        .feature-detail-block .tag.gold {
+            background: rgba(251, 191, 36, 0.12);
+            color: #fbbf24;
+            border-color: rgba(251, 191, 36, 0.1);
+        }
+
+        /* ===== FEATURE IMAGE ===== */
+        .feature-image {
+            background: linear-gradient(135deg, #0a0c12, #141a24);
+            border-radius: 16px;
+            padding: 20px 20px;
+            text-align: center;
+            border: 1px dashed #2a1f3a;
+            margin: 16px 0 8px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .feature-image img {
+            max-width: 100%;
+            border-radius: 8px;
+            display: block;
+            margin: 0 auto;
+        }
+
+        .feature-image .badge {
+            position: absolute;
+            top: 16px;
+            right: 16px;
+            background: rgba(147, 51, 234, 0.15);
+            padding: 4px 16px;
+            border-radius: 20px;
+            font-size: 0.7rem;
+            color: #a855f7;
+            border: 1px solid rgba(147, 51, 234, 0.15);
+        }
+
+        /* ===== METRICS ===== */
+        .metrics {
+            background: #0a0c12;
+            border-radius: 24px;
+            padding: 44px 32px;
+            margin: 20px 0 40px;
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-around;
+            gap: 24px;
+            border: 1px solid #141a24;
+        }
+
+        .metric-item {
+            text-align: center;
+        }
+        .metric-item .value {
+            font-size: 2.4rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, #a855f7, #d8b4fe);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .metric-item .label {
+            font-size: 0.8rem;
+            color: #475569;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+            margin-top: 2px;
+        }
+
+        /* ===== LIVE FEED ===== */
+        .live-feed {
+            background: #0a0c12;
+            border-radius: 20px;
+            padding: 28px 26px;
+            border: 1px solid #141a24;
+            margin: 32px 0;
+        }
+
+        .live-feed .feed-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 18px;
+        }
+        .live-feed .feed-header h3 {
+            font-size: 1.1rem;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            color: #eef2f8;
+        }
+        .live-feed .feed-header .dot {
+            width: 10px;
+            height: 10px;
+            background: #22c55e;
+            border-radius: 50%;
+            display: inline-block;
+            animation: pulse-dot 1.5s infinite;
+            box-shadow: 0 0 20px rgba(34, 197, 94, 0.3);
+        }
+
+        @keyframes pulse-dot {
+            0%,
+            100% {
+                opacity: 1;
+                transform: scale(1);
+            }
+            50% {
+                opacity: 0.3;
+                transform: scale(0.7);
+            }
+        }
+
+        .feed-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 0;
+            border-bottom: 1px solid #141a24;
+            font-size: 0.95rem;
+        }
+        .feed-item:last-child {
+            border-bottom: none;
+        }
+        .feed-item .user {
+            font-weight: 600;
+            color: #eef2f8;
+        }
+        .feed-item .user i {
+            color: #9333ea;
+            margin-right: 8px;
+        }
+        .feed-item .tag {
+            background: #141a24;
+            padding: 2px 14px;
+            border-radius: 20px;
+            font-size: 0.7rem;
+            font-weight: 700;
+            color: #a855f7;
+            border: 1px solid #1e2636;
+        }
+        .feed-item .time {
+            color: #475569;
+            font-size: 0.8rem;
+        }
+
+        /* ===== TERMINAL ===== */
+        .terminal {
+            background: #05070a;
+            border: 1px solid #141a24;
+            border-radius: 16px;
+            padding: 22px 26px;
+            margin: 28px 0;
+            font-family: 'Fira Code', 'Courier New', monospace;
+            font-size: 0.85rem;
+            color: #818cf8;
+            box-shadow: inset 0 0 40px rgba(0, 0, 0, 0.6);
+            overflow-x: auto;
+        }
+        .terminal .line {
+            display: flex;
+            gap: 14px;
+            padding: 3px 0;
+        }
+        .terminal .prompt {
+            color: #9333ea;
+            font-weight: 600;
+        }
+        .terminal .success {
+            color: #34d399;
+        }
+        .terminal .dim {
+            color: #475569;
+        }
+
+        /* ===== INSTALLATION ===== */
+        .install-section {
+            padding: 50px 0 30px;
+        }
+
+        .install-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 24px;
+            margin-top: 28px;
+        }
+
+        .install-card {
+            background: #0a0c12;
+            border-radius: 20px;
+            padding: 30px 20px;
+            border: 1px solid #141a24;
+            text-align: center;
+            transition: all 0.35s;
+            position: relative;
+        }
+
+        .install-card:hover {
+            border-color: #2a1f3a;
+            transform: translateY(-4px);
+            box-shadow: 0 16px 48px rgba(0, 0, 0, 0.5);
+        }
+
+        .install-card i {
+            font-size: 2.8rem;
+            color: #9333ea;
+            margin-bottom: 12px;
+            filter: drop-shadow(0 0 20px rgba(147, 51, 234, 0.15));
+        }
+        .install-card h4 {
+            font-size: 1.2rem;
+            color: #eef2f8;
+            margin-bottom: 2px;
+        }
+        .install-card .specs {
+            font-size: 0.8rem;
+            color: #64748b;
+            margin: 6px 0 14px;
+        }
+        .install-card .specs.warn {
+            color: #f87171;
+        }
+        .install-card .btn-secondary {
+            padding: 8px 28px;
+            font-size: 0.85rem;
+        }
+
+        /* ===== FOOTER ===== */
+        footer {
+            border-top: 1px solid #141a24;
+            padding: 36px 0 28px;
+            margin-top: 40px;
+            text-align: center;
+            color: #475569;
+            font-size: 0.85rem;
+        }
+        footer .socials {
+            display: flex;
+            justify-content: center;
+            gap: 24px;
+            margin-bottom: 14px;
+        }
+        footer .socials a {
+            color: #475569;
+            font-size: 1.5rem;
+            transition: all 0.3s;
+        }
+        footer .socials a:hover {
+            color: #9333ea;
+            transform: translateY(-3px);
+            filter: drop-shadow(0 0 20px rgba(147, 51, 234, 0.25));
+        }
+
+        /* ===== RESPONSIVE ===== */
+        @media (max-width: 768px) {
+            .hero h1 {
+                font-size: 2.6rem;
+            }
+            .hero::before {
+                width: 300px;
+                height: 300px;
+            }
+            .nav {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            .nav-links {
+                flex-wrap: wrap;
+                justify-content: center;
+                gap: 14px;
+            }
+            .metrics {
+                flex-direction: column;
+                align-items: center;
+            }
+            .hero-buttons .btn-primary,
+            .hero-buttons .btn-secondary {
+                width: 100%;
+                text-align: center;
+                justify-content: center;
+            }
+            .btn-download {
+                width: 100%;
+                justify-content: center;
+            }
+            .feature-detail-block {
+                padding: 24px 20px;
+            }
+            .feature-image {
+                padding: 16px 16px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .hero h1 {
+                font-size: 2rem;
+            }
+            .container {
+                padding: 0 16px;
+            }
+            .feature-card {
+                padding: 22px 16px;
+            }
+            .live-feed {
+                padding: 18px 16px;
+            }
+            .terminal {
+                padding: 16px;
+                font-size: 0.75rem;
+            }
+            .feature-detail-block {
+                padding: 18px 14px;
+            }
+            .feature-image .badge {
+                top: 8px;
+                right: 8px;
+                font-size: 0.6rem;
+                padding: 2px 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- ===== HEADER ===== -->
+    <header>
+        <div class="container nav">
+            <div class="logo">
+                <i class="fas fa-bolt"></i>
+                <span>Xeno</span>Executor
+            </div>
+            <ul class="nav-links">
+                <li><a class="active" data-section="home">Home</a></li>
+                <li><a data-section="features">Features</a></li>
+                <li><a data-section="download">Download</a></li>
+                <li><a data-section="guide">Guide</a></li>
+            </ul>
+            <div class="nav-actions">
+                <a href="#" class="btn-primary" style="padding:10px 28px; font-size:0.85rem;">
+                    <i class="fas fa-cloud-download-alt"></i> Download
+                </a>
+            </div>
+        </div>
+    </header>
+
+    <!-- ===== HERO / HOME ===== -->
+    <section class="hero container" id="section-home">
+        <div class="hero-badge">
+            <i class="fas fa-circle"></i> v2.4.0 Live — Keyless Engine Active
+        </div>
+        <h1>
+            <span class="highlight">XENO</span> EXECUTOR
+        </h1>
+        <p>
+            Drop into your favorite games instantly. Xeno Executor delivers a seamless,
+            100% keyless injection experience. No endless linkvertises or crash loops —
+            just raw, uninterrupted performance.
+        </p>
+        <div class="hero-buttons">
+            <a href="#" class="btn-download">
+                <i class="fas fa-download"></i> Download for PC
+            </a>
+            <a href="#" class="btn-secondary">
+                <i class="fas fa-mobile-alt"></i> Download Mobile APK
+            </a>
+        </div>
+    </section>
+
+    <!-- ===== FEATURES DETAIL (what you requested) ===== -->
+    <section class="container feature-detail active" id="section-features">
+        
+        <!-- Clean Interface -->
+        <div class="feature-detail-block">
+            <div class="detail-icon"><i class="fas fa-wind"></i></div>
+            <h2>Clean <span class="highlight">Interface</span></h2>
+            <p>
+                Everything right where you need it. We hate cluttered menus as much as you do. 
+                Whether you're playing on PC or you decide to download Xeno Executor APK for Android, 
+                you get the exact same fluid, distraction-free layout.
+            </p>
+            
+            <div class="tag-group">
+                <span class="tag"><i class="fas fa-check"></i> PC &amp; Android</span>
+                <span class="tag green"><i class="fas fa-bolt"></i> Fluid UI</span>
+                <span class="tag gold"><i class="fas fa-star"></i> Distraction-free</span>
+            </div>
+
+            <!-- UPDATED: Image with your specified URL -->
+            <div class="feature-image">
+                <span class="badge"></span>
+                <img src="https://xeno.fyi/img/xenoexecutorui.webp" alt="Xeno Executor UI - Clean Interface for PC and Android" style="max-width: 100%; border-radius: 8px;">
+            </div>
+        </div>
+
+        <!-- Under the Hood -->
+        <div class="feature-detail-block">
+            <div class="detail-icon"><i class="fas fa-microchip"></i></div>
+            <h2>Under the <span class="highlight">Hood</span></h2>
+            <p>
+                Buttery smooth execution. No frame drops. The engine chews through code in the 
+                background while your game stays stable and responsive.
+            </p>
+
+            <div class="tag-group">
+                <span class="tag green"><i class="fas fa-check"></i> 0% Frame Drop</span>
+                <span class="tag"><i class="fas fa-rocket"></i> Ultra-fast</span>
+                <span class="tag gold"><i class="fas fa-shield-alt"></i> Stable</span>
+            </div>
+
+            <!-- Image placeholder 2 -->
+            <div class="feature-image">
+                <span class="badge">Screenshot 2</span>
+                <i class="fas fa-chart-line" style="font-size:3rem; color:#9333ea; opacity:0.6; display:block; margin:20px auto;"></i>
+                <div class="placeholder-text" style="color:#475569; font-size:0.9rem;">Under the Hood — Performance metrics</div>
+                <div style="color:#475569; font-size:0.8rem; margin-top:4px;">
+                    <i class="fas fa-upload"></i> Replace with your image
+                </div>
+            </div>
+        </div>
+
+        <!-- Fully Undetected -->
+        <div class="feature-detail-block">
+            <div class="detail-icon"><i class="fas fa-shield-alt"></i></div>
+            <h2>Fully <span class="highlight">Undetected</span></h2>
+            <p>
+                No crashing, no issues. Xeno Executor is completely free and built with stability 
+                in mind. Enjoy a seamless experience without worrying about bans or crashes.
+            </p>
+
+            <div class="tag-group">
+                <span class="tag green"><i class="fas fa-check"></i> 100% Undetected</span>
+                <span class="tag"><i class="fas fa-ban"></i> No Crashes</span>
+                <span class="tag gold"><i class="fas fa-gem"></i> Completely Free</span>
+            </div>
+
+            <!-- Image placeholder 3 -->
+            <div class="feature-image">
+                <span class="badge">Screenshot 3</span>
+                <i class="fas fa-shield-virus" style="font-size:3rem; color:#9333ea; opacity:0.6; display:block; margin:20px auto;"></i>
+                <div class="placeholder-text" style="color:#475569; font-size:0.9rem;">Fully Undetected — Safe &amp; stable</div>
+                <div style="color:#475569; font-size:0.8rem; margin-top:4px;">
+                    <i class="fas fa-upload"></i> Replace with your image
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ===== FEATURES GRID (original) ===== -->
+    <section class="features container" id="section-features-grid">
+        <h2 class="section-title">Engineered for <span>raw performance</span></h2>
+        <p class="section-subtitle">
+            We stripped away the bloat. No annoying popups, no lag — just a clean environment
+            that gets you straight into the game.
+        </p>
+
+        <div class="features-grid">
+            <div class="feature-card">
+                <div class="icon"><i class="fas fa-wind"></i></div>
+                <h3>Clean Interface</h3>
+                <p>Everything right where you need it. Same fluid, distraction-free layout on PC and Android.</p>
+            </div>
+            <div class="feature-card">
+                <div class="icon"><i class="fas fa-rocket"></i></div>
+                <h3>Buttery Smooth</h3>
+                <p>No frame drops. The engine chews through code in the background while your game stays stable.</p>
+            </div>
+            <div class="feature-card">
+                <div class="icon"><i class="fas fa-shield-alt"></i></div>
+                <h3>Run Anything, Anytime</h3>
+                <p>From blade ball scripts to auto-farms, our thread management stops crashes before they happen.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- ===== METRICS ===== -->
+    <section class="container">
+        <div class="metrics">
+            <div class="metric-item">
+                <div class="value">Instant</div>
+                <div class="label">Launch Speed</div>
+            </div>
+            <div class="metric-item">
+                <div class="value">Bypassed</div>
+                <div class="label">Key System</div>
+            </div>
+            <div class="metric-item">
+                <div class="value">99.9%</div>
+                <div class="label">Stability</div>
+            </div>
+            <div class="metric-item">
+                <div class="value">0.4s</div>
+                <div class="label">Injection Time</div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ===== LIVE FEED ===== -->
+    <section class="container">
+        <div class="live-feed">
+            <div class="feed-header">
+                <h3>
+                    <span class="dot"></span> Live Feed
+                </h3>
+                <span style="color:#475569; font-size:0.8rem;">
+                    <i class="fas fa-sync-alt"></i> Live
+                </span>
+            </div>
+            <div class="feed-item">
+                <span class="user"><i class="fas fa-user"></i> DarkMaster</span>
+                <span class="tag">EXE</span>
+                <span class="time">Just now</span>
+            </div>
+            <div class="feed-item">
+                <span class="user"><i class="fas fa-user"></i> VoidKiller</span>
+                <span class="tag">JPA</span>
+                <span class="time">Just now</span>
+            </div>
+            <div class="feed-item">
+                <span class="user"><i class="fas fa-user"></i> ZeroGirl</span>
+                <span class="tag">APK</span>
+                <span class="time">1 min ago</span>
+            </div>
+            <div class="feed-item">
+                <span class="user"><i class="fas fa-user"></i> ProMaster</span>
+                <span class="tag">.EXE</span>
+                <span class="time">2 min ago</span>
+            </div>
+        </div>
+    </section>
+
+    <!-- ===== TERMINAL ===== -->
+    <section class="container">
+        <div class="terminal">
+            <div class="line"><span class="prompt">></span> Fetching dependencies...</div>
+            <div class="line"><span class="prompt">></span> Loading game: https://raw.githubusercontent.com/...</div>
+            <div class="line"><span class="prompt">></span> <span class="success">✓ Injection successful (0.4s)</span></div>
+            <div class="line"><span class="prompt">></span> <span class="success">✓ Thread management active</span></div>
+            <div class="line"><span class="prompt">></span> <span class="dim">Xeno v2.4.0 ready.</span></div>
+        </div>
+    </section>
+
+    <!-- ===== INSTALLATION ===== -->
+    <section class="install-section container" id="section-download">
+        <h2 class="section-title">Installation <span>Guide</span></h2>
+        <p class="section-subtitle">Select your platform to get started.</p>
+
+        <div class="install-grid">
+            <div class="install-card">
+                <i class="fab fa-windows"></i>
+                <h4>Xeno for Windows</h4>
+                <div class="specs">Windows 10 / 11 (64-bit) • 4GB+ RAM</div>
+                <div class="specs warn">⚠ AV Exclusions Required</div>
+                <a href="#" class="btn-secondary"><i class="fas fa-download"></i> Download</a>
+            </div>
+            <div class="install-card">
+                <i class="fab fa-android"></i>
+                <h4>Xeno for Android</h4>
+                <div class="specs">Android 8.0+ • ARM64</div>
+                <div class="specs" style="color:#64748b;">APK available</div>
+                <a href="#" class="btn-secondary"><i class="fas fa-download"></i> Download APK</a>
+            </div>
+            <div class="install-card">
+                <i class="fab fa-apple"></i>
+                <h4>Xeno for iOS</h4>
+                <div class="specs">iOS 14+ • Jailbreak optional</div>
+                <div class="specs" style="color:#64748b;">IPA available</div>
+                <a href="#" class="btn-secondary"><i class="fas fa-download"></i> Download IPA</a>
+            </div>
+        </div>
+    </section>
+
+    <!-- ===== FOOTER ===== -->
+    <footer>
+        <div class="container">
+            <div class="socials">
+                <a href="#"><i class="fab fa-github"></i></a>
+                <a href="#"><i class="fab fa-discord"></i></a>
+                <a href="#"><i class="fab fa-twitter"></i></a>
+                <a href="#"><i class="fab fa-y
